@@ -1,6 +1,6 @@
 import { ImgTouchButton, TouchButton } from "@microsoft/msfs-garminsdk";
 import { DisplayComponent, FSComponent, Subject } from "@microsoft/msfs-sdk";
-import AcarsTabView from "./AcarsTabView";
+import AcarsTabView, { AcarsSettingsPopUp, getSettingsManager } from "./AcarsTabView";
 import { GtcViewLifecyclePolicy } from "@microsoft/msfs-wtg3000-gtc";
 import { loadFuelAndBalance } from "./WeightAndBalance.mjs";
 import getAircraftIcao from "./AircraftModels.mjs";
@@ -155,6 +155,21 @@ export const registerViews = (ctx, fms) => {
           displayPaneIndex={displayPaneIndex}
           controlMode={controlMode}
           fms={fms}
+        />
+      );
+    },
+  );
+  ctx.registerView(
+    GtcViewLifecyclePolicy.Transient,
+    "ACARS_SETTINGS",
+    "MFD",
+    (gtcService, controlMode, displayPaneIndex) => {
+      return (
+        <AcarsSettingsPopUp
+          settingsManager={getSettingsManager(gtcService.bus)}
+          gtcService={gtcService}
+          displayPaneIndex={displayPaneIndex}
+          controlMode={controlMode}
         />
       );
     },

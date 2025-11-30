@@ -1134,13 +1134,14 @@ class AcarsTabView extends GtcView {
           }
           oldClient.dispose();
           const hoppieCode = this.settingsManager.getSetting("acars_code").get();
+          const isBeyondAtc = v === "beyondatc";
 
           const client = createClient(
-            hoppieCode,
+            isBeyondAtc ? null : hoppieCode,
             oldClient.callsign,
             getAircraftIcao(),
             this.onMessage.bind(this),
-            this.settingsManager.getSetting("network").get(),
+            v,
           );
           this.client.set(client);
           this.canCreate.set(true);
@@ -1169,13 +1170,15 @@ class AcarsTabView extends GtcView {
             const hoppieCode = this.settingsManager
               .getSetting("acars_code")
               .get();
-            if (v && v.length && hoppieCode) {
+            const network = this.settingsManager.getSetting("network").get();
+            const isBeyondAtc = network === "beyondatc";
+            if (v && v.length && (hoppieCode || isBeyondAtc)) {
               const client = createClient(
-                hoppieCode,
+                isBeyondAtc ? null : hoppieCode,
                 v,
                 getAircraftIcao(),
                 this.onMessage.bind(this),
-                this.settingsManager.getSetting("network").get(),
+                network,
               );
               this.client.set(client);
               this.props.gtcService.bus.getPublisher().pub(
@@ -1889,4 +1892,28 @@ class AcarsTabView extends GtcView {
     );
   }
 }
+// Singleton settings manager cache
+let settingsManagerInstance = null;
+
+export function getSettingsManager(bus) {
+  if (!settingsManagerInstance) {
+    settingsManagerInstance = new DefaultUserSettingManager(bus, [
+      {
+        defaultValue: GetStoredData("hoppie_code"),
+        name: "acars_code",
+      },
+      {
+        defaultValue: GetStoredData("g3ka_simbrief_id"),
+        name: "g3ka_simbrief_id",
+      },
+      {
+        defaultValue: GetStoredData("g3ka_network") || "hoppie",
+        name: "network",
+      },
+    ]);
+  }
+  return settingsManagerInstance;
+}
+
+export { AcarsSettingsPopUp };
 export default AcarsTabView;

@@ -157,6 +157,73 @@ const SERVICES = {
 };
 ```
 
+## Hoppie ACARS API
+Docs: https://www.hoppie.nl/acars/system/tech.html
+
+### Connessione
+- **URL**: `http://www.hoppie.nl/acars/system/connect.html`
+- **Protocollo**: GET o POST (preferire POST per payload lunghi)
+- **Timeout HTTP**: 15 secondi, poi skip e retry dopo delay normale
+
+### Parametri Richiesta
+| Param | Descrizione |
+|-------|-------------|
+| `logon` | Codice segreto (min 24 char, mix lowercase/uppercase/numeri) |
+| `from` | Callsign mittente |
+| `to` | Callsign destinatario (o "SERVER" per messaggi al server) |
+| `type` | Tipo messaggio: `poll`, `telex`, `cpdlc`, `ping`, `posreq`, `position`, `datareq`, `peek`, `progress`, `inforeq` |
+| `packet` | Payload del messaggio |
+
+### Tipi di Messaggio
+| Type | Uso |
+|------|-----|
+| `poll` | **Polling periodico** - ritorna messaggi pendenti per il callsign |
+| `telex` | Messaggi generici (bulk del traffico non specializzato) |
+| `cpdlc` | Messaggi CPDLC/ADS-C per ATC. "@" = line feed |
+| `ping` | Test connessione (non registra online). Con `packet=ALL-CALLSIGNS` ritorna lista stazioni |
+| `peek` | Come poll ma ritorna TUTTI i messaggi delle ultime 24h (usare con cautela!) |
+| `inforeq` | Richiesta info: `metar ICAO`, `taf ICAO`, `vatatis ICAO`, `peatis ICAO`, `ivaoatis ICAO` |
+| `posreq` | Richiesta posizione |
+| `progress` | Out/off/on/in times e ETA |
+
+### Polling Best Practices
+```
+⚠️ REGOLE FONDAMENTALI:
+1. NON iniziare polling finché non si invia il PRIMO messaggio
+2. Polling ogni 45-75 secondi (random per stabilità server)
+3. Dopo invio richiesta: polling ogni 20 sec per breve tempo
+4. Timeout 15 sec → skip attempt, retry dopo delay normale
+5. URL max 256 caratteri (usare POST per payload lunghi)
+```
+
+### Esempio Richiesta
+```javascript
+// GET
+`${url}?logon=${logon}&from=${callsign}&to=SERVER&type=poll&packet=`
+
+// Telex
+`${url}?logon=${logon}&from=${callsign}&to=${dest}&type=telex&packet=${encodeURIComponent(msg)}`
+
+// CPDLC
+`${url}?logon=${logon}&from=${callsign}&to=${atcStation}&type=cpdlc&packet=${cpdlcPayload}`
+
+// Weather request
+`${url}?logon=${logon}&from=${callsign}&to=SERVER&type=inforeq&packet=metar LIRF`
+```
+
+### Workaround Telex per InfoReq
+Se non implementato inforeq, usare telex con pattern HCnnn:
+```
+HC000 text  → Echo test
+HC001 ICAO  → PilotEdge ATIS
+HC002 ICAO  → IVAO ATIS (trattini → underscore)
+```
+
+### Response Parsing
+- Messaggi multipli separati da delimitatori
+- CPDLC: "@" indica line feed
+- Poll ritorna lista messaggi pendenti o vuoto
+
 ## Key Imports
 - `@microsoft/msfs-sdk`: DisplayComponent, FSComponent, Subject, ArraySubject, CasRegistrationManager
 - `@microsoft/msfs-garminsdk`: TouchButton, UnitsUserSettings

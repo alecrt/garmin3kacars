@@ -1,7 +1,31 @@
 # Garmin 3000/5000 ACARS Extension
 
 Plugin ACARS/CPDLC per G3000/G5000 in MSFS 2024.
-Docs: https://microsoft.github.io/msfs-avionics-mirror/2024/
+
+## Framework Reference (Submodule)
+Il codice sorgente del framework MSFS Avionics è disponibile in `reference/msfs-avionics/`.
+- Docs online: https://microsoft.github.io/msfs-avionics-mirror/2024/
+- GitHub: https://github.com/microsoft/msfs-avionics-mirror
+
+### Percorsi Utili
+```
+reference/msfs-avionics/src/
+├── sdk/                              # @microsoft/msfs-sdk
+├── garminsdk/                        # @microsoft/msfs-garminsdk
+└── workingtitle-instruments-g3000/   # G3000/G5000 implementation
+    ├── html_ui/GTC/                  # GTC components & pages
+    │   ├── Pages/MfdHomePage/        # MFD Home page
+    │   ├── Pages/UtilitiesPage/      # Utilities page
+    │   └── Components/TouchButton/   # Button components
+    └── wtg3000common/                # @microsoft/msfs-wtg3000-common
+        └── html_ui/Shared/
+            └── GtcView/GtcViewKeys.ts  # View keys enum
+```
+
+### Aggiornare il Submodule
+```bash
+git submodule update --remote reference/msfs-avionics
+```
 
 ## Stack
 - Framework: MSFS 2024 Avionics (JS/JSX)

@@ -4,3 +4,6 @@ node_modules/
 g3000-acars/Packages
 g3000-acars/_PackageInt
 g3000-acars/PackageSources/Copys/
+tools/PayloadStationsReader/bin
+tools/PayloadStationsReader/obj
+tools/PayloadStationsReader/publish

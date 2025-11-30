@@ -1,5 +1,7 @@
 import * as esbuild from "esbuild";
 
+const isWatch = process.argv.includes("--watch") || process.argv.includes("-w");
+
 const ctx = await esbuild.context({
   entryPoints: ["src/app.mjs"],
   bundle: true,
@@ -36,4 +38,11 @@ const ctx = await esbuild.context({
   ],
 });
 
-await ctx.watch();
+if (isWatch) {
+  console.log("Watching for changes...");
+  await ctx.watch();
+} else {
+  await ctx.rebuild();
+  await ctx.dispose();
+  console.log("Build completed!");
+}

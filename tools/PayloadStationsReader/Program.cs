@@ -35,7 +35,7 @@ namespace PayloadStationsReader
             AircraftInfo
         }
 
-        // Strutture per i dati
+        // Data structures
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
         struct TitleStruct
         {
@@ -93,7 +93,7 @@ namespace PayloadStationsReader
 
             PrintHeader();
 
-            Console.WriteLine("Connessione a MSFS 2024...");
+            Console.WriteLine("Connecting to MSFS 2024...");
             Console.WriteLine();
 
             try
@@ -106,11 +106,11 @@ namespace PayloadStationsReader
                 simconnect.OnRecvSimobjectData += Simconnect_OnRecvSimobjectData;
                 simconnect.OnRecvException += Simconnect_OnRecvException;
 
-                // Registra le definizioni dati
+                // Register data definitions
                 RegisterDataDefinitions();
 
-                // Loop principale
-                int timeout = 100; // 10 secondi
+                // Main loop
+                int timeout = 100; // 10 seconds
                 while (!connected && timeout > 0)
                 {
                     simconnect.ReceiveMessage();
@@ -120,14 +120,14 @@ namespace PayloadStationsReader
 
                 if (!connected)
                 {
-                    Console.WriteLine("ERRORE: Timeout connessione a MSFS");
+                    Console.WriteLine("ERROR: Connection timeout to MSFS");
                     return;
                 }
 
-                // Richiedi i dati
+                // Request data
                 RequestData();
 
-                // Attendi i dati
+                // Wait for data
                 timeout = 100;
                 while (!dataReceived && timeout > 0)
                 {
@@ -142,25 +142,25 @@ namespace PayloadStationsReader
                 }
                 else
                 {
-                    Console.WriteLine("ATTENZIONE: Nessuna payload station trovata.");
+                    Console.WriteLine("WARNING: No payload stations found.");
                 }
 
                 simconnect.Dispose();
             }
             catch (COMException ex)
             {
-                Console.WriteLine("ERRORE SimConnect: " + ex.Message);
+                Console.WriteLine("ERROR SimConnect: " + ex.Message);
                 Console.WriteLine();
                 PrintTroubleshooting();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ERRORE: " + ex.Message);
+                Console.WriteLine("ERROR: " + ex.Message);
                 Console.WriteLine(ex.StackTrace);
             }
 
             Console.WriteLine();
-            Console.WriteLine("Premi un tasto per uscire...");
+            Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
 
@@ -169,7 +169,7 @@ namespace PayloadStationsReader
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("================================================================");
             Console.WriteLine("         MSFS Payload Stations Reader                          ");
-            Console.WriteLine("         Per identificare PAX e CARGO stations                 ");
+            Console.WriteLine("         Identify PAX and CARGO stations                       ");
             Console.WriteLine("================================================================");
             Console.ResetColor();
             Console.WriteLine();
@@ -177,17 +177,17 @@ namespace PayloadStationsReader
 
         static void RegisterDataDefinitions()
         {
-            // Titolo aereo
+            // Aircraft title
             simconnect.AddToDataDefinition(DefinitionId.AircraftTitle, "TITLE", null,
                 SIMCONNECT_DATATYPE.STRING256, 0, SimConnect.SIMCONNECT_UNUSED);
             simconnect.RegisterDataDefineStruct<TitleStruct>(DefinitionId.AircraftTitle);
 
-            // Conteggio stazioni
+            // Station count
             simconnect.AddToDataDefinition(DefinitionId.StationCount, "PAYLOAD STATION COUNT", "number",
                 SIMCONNECT_DATATYPE.FLOAT64, 0, SimConnect.SIMCONNECT_UNUSED);
             simconnect.RegisterDataDefineStruct<CountStruct>(DefinitionId.StationCount);
 
-            // Info aereo
+            // Aircraft info
             simconnect.AddToDataDefinition(DefinitionId.AircraftInfo, "EMPTY WEIGHT", "pounds",
                 SIMCONNECT_DATATYPE.FLOAT64, 0, SimConnect.SIMCONNECT_UNUSED);
             simconnect.AddToDataDefinition(DefinitionId.AircraftInfo, "MAX GROSS WEIGHT", "pounds",
@@ -201,17 +201,17 @@ namespace PayloadStationsReader
 
         static void RequestData()
         {
-            // Richiedi titolo aereo
+            // Request aircraft title
             simconnect.RequestDataOnSimObject(RequestId.AircraftTitle, DefinitionId.AircraftTitle,
                 SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.ONCE,
                 SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
 
-            // Richiedi conteggio stazioni
+            // Request station count
             simconnect.RequestDataOnSimObject(RequestId.StationCount, DefinitionId.StationCount,
                 SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.ONCE,
                 SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
 
-            // Richiedi info aereo
+            // Request aircraft info
             simconnect.RequestDataOnSimObject(RequestId.AircraftInfo, DefinitionId.AircraftInfo,
                 SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.ONCE,
                 SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
@@ -221,7 +221,7 @@ namespace PayloadStationsReader
         {
             for (int i = 1; i <= stationCount; i++)
             {
-                // Crea definizione dinamica per ogni stazione
+                // Create dynamic definition for each station
                 var defId = (DefinitionId)(100 + i);
                 var reqId = (RequestId)(100 + i);
 
@@ -241,24 +241,24 @@ namespace PayloadStationsReader
         {
             connected = true;
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("OK - Connesso a: " + data.szApplicationName);
+            Console.WriteLine("OK - Connected to: " + data.szApplicationName);
             Console.ResetColor();
-            Console.WriteLine("   Versione: " + data.dwApplicationVersionMajor + "." + data.dwApplicationVersionMinor);
+            Console.WriteLine("   Version: " + data.dwApplicationVersionMajor + "." + data.dwApplicationVersionMinor);
             Console.WriteLine();
         }
 
         static void Simconnect_OnRecvQuit(SimConnect sender, SIMCONNECT_RECV data)
         {
-            Console.WriteLine("ATTENZIONE: MSFS si e' disconnesso");
+            Console.WriteLine("WARNING: MSFS disconnected");
         }
 
         static void Simconnect_OnRecvException(SimConnect sender, SIMCONNECT_RECV_EXCEPTION data)
         {
-            // Ignora alcune eccezioni comuni
+            // Ignore some common exceptions
             if (data.dwException != 3) // SIMCONNECT_EXCEPTION_ERROR
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("ATTENZIONE: SimConnect Exception: " + data.dwException);
+                Console.WriteLine("WARNING: SimConnect Exception: " + data.dwException);
                 Console.ResetColor();
             }
         }
@@ -270,7 +270,7 @@ namespace PayloadStationsReader
                 case RequestId.AircraftTitle:
                     var titleData = (TitleStruct)data.dwData[0];
                     aircraftTitle = titleData.title.Trim('\0').Trim();
-                    Console.WriteLine("Aereo: " + aircraftTitle);
+                    Console.WriteLine("Aircraft: " + aircraftTitle);
                     break;
 
                 case RequestId.StationCount:
@@ -297,7 +297,7 @@ namespace PayloadStationsReader
                     break;
 
                 default:
-                    // Dati stazione (RequestId >= 100)
+                    // Station data (RequestId >= 100)
                     int stationIndex = (int)data.dwRequestID - 100;
                     if (stationIndex >= 1 && stationIndex <= stationCount)
                     {
@@ -320,13 +320,13 @@ namespace PayloadStationsReader
 
         static void PrintResults()
         {
-            // Ordina per indice
+            // Sort by index
             stations = stations.OrderBy(s => s.Index).ToList();
 
-            // Tabella
+            // Table
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("+------+------------------------------------+----------------+----------------+");
-            Console.WriteLine("| Idx  | Nome Stazione                      | Peso (lbs)     | Peso (kg)      |");
+            Console.WriteLine("| Idx  | Station Name                       | Weight (lbs)   | Weight (kg)    |");
             Console.WriteLine("+------+------------------------------------+----------------+----------------+");
             Console.ResetColor();
 
@@ -344,7 +344,7 @@ namespace PayloadStationsReader
             Console.ResetColor();
             Console.WriteLine();
 
-            // Analisi automatica
+            // Automatic analysis
             var paxStations = new List<int>();
             var cargoStations = new List<int>();
             var unknownStations = new List<int>();
@@ -379,7 +379,7 @@ namespace PayloadStationsReader
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("ANALISI AUTOMATICA (verifica manualmente!):");
+            Console.WriteLine("AUTOMATIC ANALYSIS (verify manually!):");
             Console.ResetColor();
             Console.WriteLine();
             Console.WriteLine("   PAX stations:   [" + string.Join(", ", paxStations) + "]");
@@ -387,19 +387,19 @@ namespace PayloadStationsReader
             if (unknownStations.Count > 0)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("   Non identificate: [" + string.Join(", ", unknownStations) + "]");
+                Console.WriteLine("   Unidentified:   [" + string.Join(", ", unknownStations) + "]");
                 Console.ResetColor();
             }
             Console.WriteLine();
 
-            // Genera codice basato sul titolo dell'aereo
+            // Generate code based on aircraft title
             string aircraftKey = "Vision Jet";
             if (aircraftTitle.ToLower().Contains("longitude")) aircraftKey = "Longitude";
             else if (aircraftTitle.ToLower().Contains("tbm")) aircraftKey = "TBM 930";
             else if (aircraftTitle.ToLower().Contains("cj3")) aircraftKey = "CJ3+";
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("CODICE da aggiungere a AircraftModels.mjs:");
+            Console.WriteLine("CODE to add to AircraftModels.mjs:");
             Console.ResetColor();
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -410,9 +410,9 @@ namespace PayloadStationsReader
             Console.ResetColor();
             Console.WriteLine();
 
-            // Info aggiuntive
+            // Additional info
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine("INFO AEREO:");
+            Console.WriteLine("AIRCRAFT INFO:");
             Console.ResetColor();
             Console.WriteLine("   Empty Weight:     " + aircraftInfo.EmptyWeight.ToString("F0") + " lbs (" + (aircraftInfo.EmptyWeight * 0.453592).ToString("F0") + " kg)");
             Console.WriteLine("   Max Gross Weight: " + aircraftInfo.MaxGrossWeight.ToString("F0") + " lbs (" + (aircraftInfo.MaxGrossWeight * 0.453592).ToString("F0") + " kg)");
@@ -423,12 +423,12 @@ namespace PayloadStationsReader
         static void PrintTroubleshooting()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("SUGGERIMENTI:");
+            Console.WriteLine("TROUBLESHOOTING:");
             Console.ResetColor();
-            Console.WriteLine("   1. Assicurati che MSFS 2024 sia in esecuzione");
-            Console.WriteLine("   2. Assicurati che un aereo sia caricato (non nel menu principale)");
-            Console.WriteLine("   3. Verifica che SimConnect.dll sia nella stessa cartella dell'exe");
-            Console.WriteLine("   4. Esegui come amministratore se necessario");
+            Console.WriteLine("   1. Make sure MSFS 2024 is running");
+            Console.WriteLine("   2. Make sure an aircraft is loaded (not in main menu)");
+            Console.WriteLine("   3. Verify SimConnect.dll is in the same folder as the exe");
+            Console.WriteLine("   4. Try running as administrator if needed");
         }
     }
 }

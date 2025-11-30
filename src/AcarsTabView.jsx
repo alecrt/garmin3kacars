@@ -223,7 +223,7 @@ class StatusTab extends DisplayComponent {
       if (!client.active_station) client.sendLogonRequest(this.facility.get());
       else client.sendLogoffRequest();
     } else {
-      props.gtcService.bus.getPublisher().pub(
+      this.props.gtcService.bus.getPublisher().pub(
         "acars_message_request",
         {
           key: !client.active_station

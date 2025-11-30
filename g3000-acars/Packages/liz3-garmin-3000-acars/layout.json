@@ -8,42 +8,42 @@
     {
       "path": "html_ui/garmin-3000-acars/assets/anntena.png",
       "size": 1271,
-      "date": 134090120530000000
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/garmin-3000-acars/assets/antenna_green.png",
       "size": 1009,
-      "date": 134090120530000000
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/garmin-3000-acars/assets/plane.png",
       "size": 827,
-      "date": 134090120530000000
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/garmin-3000-acars/assets/tower.png",
       "size": 671,
-      "date": 134090120530000000
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/garmin-3000-acars/assets/tower_green.png",
       "size": 908,
-      "date": 134090120530000000
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/garmin-3000-acars/plugin.css",
       "size": 15896,
-      "date": 134090120530000000
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/garmin-3000-acars/plugin.js",
-      "size": 90161,
-      "date": 134090120530000000
+      "size": 90222,
+      "date": 134090132770000000
     },
     {
       "path": "html_ui/plugins/g3000-acars.xml",
       "size": 206,
-      "date": 134090120530000000
+      "date": 134090132770000000
     }
   ]
 }

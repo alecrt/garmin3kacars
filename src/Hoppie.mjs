@@ -140,7 +140,7 @@ const handleSuccessfulSend = (state, text) => {
 const poll = (state) => {
   const interval = getPollInterval(state);
   state._interval = setTimeout(() => {
-    sendAcarsMessage(state, "SERVER", "Nothing", "POLL")
+    sendAcarsMessage(state, "SERVER", "Nothing", "poll")
       .then((response) => {
         if (response.ok) {
           response

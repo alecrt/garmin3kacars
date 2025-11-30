@@ -171,9 +171,10 @@
   var poll = (state) => {
     const interval = getPollInterval(state);
     state._interval = setTimeout(() => {
-      sendAcarsMessage(state, "SERVER", "Nothing", "POLL").then((response) => {
+      sendAcarsMessage(state, "SERVER", "Nothing", "poll").then((response) => {
         if (response.ok) {
           response.text().then((raw) => {
+            console.log("[ACARS] Polling Response - ", raw);
             const messages = parseMessages(raw);
             if (messages.length > 0 && state._expectingResponse) {
               state._expectingResponse = null;

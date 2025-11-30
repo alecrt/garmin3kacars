@@ -5,13 +5,13 @@ import { GtcViewLifecyclePolicy } from "@microsoft/msfs-wtg3000-gtc";
 import { loadFuelAndBalance } from "./WeightAndBalance.mjs";
 import getAircraftIcao from "./AircraftModels.mjs";
 
-// Data Link button that replaces the Music button on MFD Home
+// Data Link button for MFD Home page (4th row)
 class DataLinkButton extends DisplayComponent {
   render() {
     return (
       <ImgTouchButton
-        label={"ATC\nData Link"}
-        imgSrc={"coui://html_ui/garmin-3000-acars/assets/anntena.png"}
+        label={"ATC\nDatalink"}
+        imgSrc={"coui://html_ui/garmin-3000-acars/assets/tower.png"}
         class={"gtc-directory-button"}
         onPressed={() => {
           this.props.service.changePageTo("CPDLC");
@@ -25,8 +25,21 @@ export const onMfdHomePage = (ctor, props, service) => {
   if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
     window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
   
-  // Return the Data Link button instead of the Music button
-  return new DataLinkButton({ service });
+  const instance = new ctor(props);
+  const originalRender = instance.render.bind(instance);
+  
+  instance.render = () => {
+    const orig = originalRender();
+    // Add the ATC Data Link button at the beginning of the 4th row (index 3)
+    if (orig.children && orig.children[3] && orig.children[3].children) {
+      orig.children[3].children.unshift(
+        <DataLinkButton service={service} />
+      );
+    }
+    return orig;
+  };
+  
+  return instance;
 };
 
 class WeightProxy extends DisplayComponent {
@@ -84,13 +97,52 @@ export const onWeightPage = (ctor, props, service, instance) => {
   });
 };
 
-export const onMfdHomePageLiv2AirCj3 = (ctor, props, service) => {
-  if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
-    window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
+// Data Link Settings button for Setup page
+class DataLinkSettingsButton extends DisplayComponent {
+  render() {
+    return (
+      <ImgTouchButton
+        label={"Datalink\nSettings"}
+        imgSrc={"coui://html_ui/garmin-3000-acars/assets/tower.png"}
+        class={"gtc-directory-button"}
+        onPressed={() => {
+          this.props.service.openPopup("ACARS_SETTINGS");
+        }}
+      />
+    );
+  }
+}
+
+// Proxy that wraps Setup page and adds Data Link Settings button
+class SetupPageProxy extends DisplayComponent {
+  render() {
+    return (
+      <FSComponent.Fragment>
+        {this.props.originalRendered}
+        <DataLinkSettingsButton service={this.props.service} />
+      </FSComponent.Fragment>
+    );
+  }
+}
+
+export const onSetupPage = (ctor, props, service) => {
+  const instance = new ctor(props);
+  const originalRender = instance.render.bind(instance);
   
-  // Return the Data Link button instead of the Music button
-  return new DataLinkButton({ service });
+  instance.render = () => {
+    const orig = originalRender();
+    // Add the Data Link Settings button to the second row
+    if (orig.children && orig.children[1] && orig.children[1].children) {
+      orig.children[1].children.push(
+        <DataLinkSettingsButton service={service} />
+      );
+    }
+    return orig;
+  };
+  
+  return instance;
 };
+
 export const registerViews = (ctx, fms) => {
   ctx.registerView(
     GtcViewLifecyclePolicy.Persistent,

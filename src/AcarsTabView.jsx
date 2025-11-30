@@ -1832,20 +1832,12 @@ class AcarsTabView extends GtcView {
           {this.renderTab(2, "CPDLC", this.renderCpdlcTab.bind(this))}
         </TabbedContainer>
         <GtcTouchButton
-          class={"acars-page-display-button2"}
+          class={"acars-page-display-button"}
           label={"Create\nMessage"}
           isVisible={true}
           isEnabled={this.canCreate}
           onPressed={() => {
             this.props.gtcService.openPopup("ACARS_MESSAGE_OPT");
-          }}
-        />
-        <GtcTouchButton
-          class={"acars-page-display-button"}
-          label={"Options"}
-          isVisible={true}
-          onPressed={() => {
-            this.props.gtcService.openPopup("ACARS_SETTINGS");
           }}
         />
       </div>

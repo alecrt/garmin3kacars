@@ -467,19 +467,31 @@ class AcarsMessagePage extends GtcView {
     this.message = Subject.create(null);
     this.canReply = Subject.create(true);
     this.messageListRef = FSComponent.createRef();
+    this.contentRef = FSComponent.createRef();
     this.from = Subject.create("");
     this.content = Subject.create("");
     this.itemHeight = Subject.create(0);
-    // i cant anymore. this framework is so terrible
     this.option1 = Subject.create(null);
     this.option2 = Subject.create(null);
     this.option3 = Subject.create(null);
+    this.sizeInterval = null;
+  }
 
+  startSizeMonitor() {
+    if (this.sizeInterval) return;
     this.sizeInterval = setInterval(() => {
-      const elem = document.getElementById("message-content-container");
+      const elem = this.contentRef.getOrDefault();
+      if (!elem) return;
       const height = elem.getBoundingClientRect().height + 30;
       if (this.itemHeight.get() !== height) this.itemHeight.set(height);
     }, 250);
+  }
+
+  stopSizeMonitor() {
+    if (this.sizeInterval) {
+      clearInterval(this.sizeInterval);
+      this.sizeInterval = null;
+    }
   }
 
   openMessage(message) {
@@ -524,15 +536,25 @@ class AcarsMessagePage extends GtcView {
 
     message.viewed = true;
   }
+  onResume() {
+    this.startSizeMonitor();
+  }
+
+  onPause() {
+    this.stopSizeMonitor();
+  }
+
   destroy() {
+    this.stopSizeMonitor();
     const value = this.messageListRef.getOrDefault();
     if (value) value.destroy();
-    if (this.sizeInterval) clearInterval(this.sizeInterval);
     super.destroy();
   }
+
   onAfterRender(thisNode) {
     this.thisNode = thisNode;
     this._title.set("CPDLC Thread");
+    this.startSizeMonitor();
   }
   renderOptionsItem(option) {
     return (
@@ -605,7 +627,7 @@ class AcarsMessagePage extends GtcView {
         >
           <GtcListItem>
             <div class={"content"}>
-              <span id="message-content-container">{this.content}</span>
+              <span ref={this.contentRef}>{this.content}</span>
             </div>
           </GtcListItem>
         </GtcList>

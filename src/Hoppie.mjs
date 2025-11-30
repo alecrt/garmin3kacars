@@ -189,7 +189,8 @@ export const convertUnixToHHMM = (unixTimestamp) => {
 
 const SERVICES = {
   hoppie: "https://www.hoppie.nl/acars/system/connect.html",
-  sayintentions: " https://acars.sayintentions.ai/acars/system/connect.html",
+  sayintentions: "https://acars.sayintentions.ai/acars/system/connect.html",
+  beyondatc: "https://acars.beyondatc.net/acars/system/connect.html", // TODO: Verifica URL esatto
 };
 
 export const createClient = (

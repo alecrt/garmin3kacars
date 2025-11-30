@@ -944,11 +944,9 @@ class AcarsSettingsPopUp extends GtcView {
             listParams={{
               title: "Network",
               inputData: [
-                { value: "hoppie", labelRenderer: (v) => "Hoppie" },
-                {
-                  value: "sayintentions",
-                  labelRenderer: (v) => "Sayintentions",
-                },
+                { value: "hoppie", labelRenderer: () => "Hoppie" },
+                { value: "sayintentions", labelRenderer: () => "SayIntentions" },
+                { value: "beyondatc", labelRenderer: () => "BeyondATC" },
               ],
             }}
           />

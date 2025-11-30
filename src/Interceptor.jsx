@@ -5,28 +5,28 @@ import { GtcViewLifecyclePolicy } from "@microsoft/msfs-wtg3000-gtc";
 import { loadFuelAndBalance } from "./WeightAndBalance.mjs";
 import getAircraftIcao from "./AircraftModels.mjs";
 
-class Proxy extends DisplayComponent {
+// Data Link button that replaces the Music button on MFD Home
+class DataLinkButton extends DisplayComponent {
   render() {
-    return <FSComponent.Fragment>{this.props.children}</FSComponent.Fragment>;
-  }
-}
-export const onSetupPage = (ctor, props, service) => {
-  if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
-    window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
-  const rendered = new ctor(props).render();
-
-  return new Proxy({
-    children: [
-      rendered,
-      <TouchButton
-        label={"ACARS"}
+    return (
+      <ImgTouchButton
+        label={"ATC\nData Link"}
+        imgSrc={"coui://html_ui/garmin-3000-acars/assets/anntena.png"}
         class={"gtc-directory-button"}
         onPressed={() => {
-          service.changePageTo("CPDLC");
+          this.props.service.changePageTo("CPDLC");
         }}
-      />,
-    ],
-  });
+      />
+    );
+  }
+}
+
+export const onMfdHomePage = (ctor, props, service) => {
+  if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
+    window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
+  
+  // Return the Data Link button instead of the Music button
+  return new DataLinkButton({ service });
 };
 
 class WeightProxy extends DisplayComponent {
@@ -84,31 +84,12 @@ export const onWeightPage = (ctor, props, service, instance) => {
   });
 };
 
-export const onSetupPageLiv2AirCj3 = (ctor, props, service) => {
-  // ??????????????????????????????
-  window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
-  class BtnClass extends DisplayComponent {
-    render() {
-      return (
-        <TouchButton
-          label={"ACARS"}
-          class={"gtc-directory-button"}
-          onPressed={() => {
-            service.changePageTo("CPDLC");
-          }}
-        />
-      );
-    }
-  }
-  const instance = new ctor(props);
-  const btn = new BtnClass({ gtcService: service });
-  const render = instance.render.bind(instance);
-  instance.render = () => {
-    const orig = render();
-    orig.children[2].children = [btn.render()];
-    return orig;
-  };
-  return instance;
+export const onMfdHomePageLiv2AirCj3 = (ctor, props, service) => {
+  if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
+    window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
+  
+  // Return the Data Link button instead of the Music button
+  return new DataLinkButton({ service });
 };
 export const registerViews = (ctx, fms) => {
   ctx.registerView(

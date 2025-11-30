@@ -4,8 +4,8 @@ import {
   GtcViewLifecyclePolicy,
 } from "@microsoft/msfs-wtg3000-gtc";
 import {
-  onSetupPage,
-  onSetupPageLiv2AirCj3,
+  onMfdHomePage,
+  onMfdHomePageLiv2AirCj3,
   onWeightPage,
   registerViews,
 } from "./Interceptor";
@@ -42,12 +42,14 @@ class GarminAcarsPlugin extends AbstractG3000GtcPlugin {
             this.weightFuelInstance,
           );
         }
-        if (ctor.name === "CustomGtcUtilitiesPage") {
-          return onSetupPageLiv2AirCj3(
+        if (
+          ctor.name === "GtcImgTouchButton" &&
+          props.label === "Music"
+        ) {
+          return onMfdHomePageLiv2AirCj3(
             ctor,
             props,
             this.binder.gtcService,
-            this.binder.fms,
           );
         }
         return undefined;
@@ -71,13 +73,12 @@ class GarminAcarsPlugin extends AbstractG3000GtcPlugin {
         }
         if (
           ctor.name === "GtcImgTouchButton" &&
-          props.label === "Crew Profile"
+          props.label === "Music"
         ) {
-          return onSetupPage(
+          return onMfdHomePage(
             ctor,
             props,
             this.binder.gtcService,
-            this.binder.fms,
           );
         }
         return undefined;

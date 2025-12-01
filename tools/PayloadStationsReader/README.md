@@ -1,59 +1,59 @@
 # Payload Stations Reader
 
-Tool CLI per leggere le payload stations di un aereo in MSFS 2024 e identificare quali sono PAX e quali CARGO.
+CLI tool to read payload stations of an aircraft in MSFS 2024 and identify which are PAX and which are CARGO.
 
-## Prerequisiti
+## Prerequisites
 
-- .NET 8 SDK (per compilare)
-- MSFS 2024 SDK installato (per le DLL SimConnect)
+- .NET 8 SDK (to build)
+- MSFS 2024 SDK installed (for SimConnect DLLs)
 
 ## Setup
 
-### 1. Copia le DLL SimConnect
+### 1. Copy SimConnect DLLs
 
-Copia **ENTRAMBE** le DLL nella cartella del progetto:
+Copy **BOTH** DLLs to the project folder:
 
-- `Microsoft.FlightSimulator.SimConnect.dll` (wrapper .NET - serve per compilare)
-- `SimConnect.dll` (nativa - serve per eseguire)
+- `Microsoft.FlightSimulator.SimConnect.dll` (.NET wrapper - needed to build)
+- `SimConnect.dll` (native - needed to run)
 
-Le trovi in uno di questi percorsi:
+You can find them in one of these paths:
 
 ```
 C:\MSFS SDK\SimConnect SDK\lib\
 C:\Program Files\Microsoft Flight Simulator 2024\SDK\SimConnect SDK\lib\
 ```
 
-### 2. Compila il progetto
+### 2. Build the project
 
 ```powershell
 cd tools/PayloadStationsReader
 dotnet publish -c Release -o publish
 ```
 
-L'eseguibile sarà in: `publish/PayloadStationsReader.exe`
+The executable will be in: `publish/PayloadStationsReader.exe`
 
-**NOTA**: Sul PC target serve .NET Framework 4.8 (già incluso in Windows 10/11).
+**NOTE**: On the target PC, .NET Framework 4.8 is required (already included in Windows 10/11).
 
-## Uso
+## Usage
 
-1. Avvia MSFS 2024
-2. Carica l'aereo desiderato (es. SF50 Vision Jet)
-3. Esegui `PayloadStationsReader.exe`
+1. Start MSFS 2024
+2. Load the desired aircraft (e.g. SF50 Vision Jet)
+3. Run `PayloadStationsReader.exe`
 
 ## Output
 
-Lo script mostrerà:
-- Lista di tutte le payload stations con nome e peso
-- Analisi automatica PAX/CARGO
-- Codice pronto da copiare in `AircraftModels.mjs`
-- Info generali sull'aereo (empty weight, max weight, ecc.)
+The script will show:
+- List of all payload stations with name and weight
+- Automatic PAX/CARGO analysis
+- Ready-to-copy code for `AircraftModels.mjs`
+- General aircraft info (empty weight, max weight, etc.)
 
-## Distribuzione
+## Distribution
 
-Per eseguire su un altro PC:
-1. Copia la cartella `publish` sul PC target
-2. Assicurati che `SimConnect.dll` sia presente
-3. Esegui `PayloadStationsReader.exe`
+To run on another PC:
+1. Copy the `publish` folder to the target PC
+2. Make sure `SimConnect.dll` is present
+3. Run `PayloadStationsReader.exe`
 
-Non è necessario installare .NET sul PC target (l'exe è self-contained).
+It is not necessary to install .NET on the target PC (the exe is self-contained).
 

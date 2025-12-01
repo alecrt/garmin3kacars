@@ -1,32 +1,45 @@
 import { ImgTouchButton, TouchButton } from "@microsoft/msfs-garminsdk";
 import { DisplayComponent, FSComponent, Subject } from "@microsoft/msfs-sdk";
-import AcarsTabView from "./AcarsTabView";
+import AcarsTabView, { AcarsSettingsPopUp, getSettingsManager } from "./AcarsTabView";
 import { GtcViewLifecyclePolicy } from "@microsoft/msfs-wtg3000-gtc";
 import { loadFuelAndBalance } from "./WeightAndBalance.mjs";
 import getAircraftIcao from "./AircraftModels.mjs";
 
-class Proxy extends DisplayComponent {
+// Data Link button for MFD Home page (4th row)
+class DataLinkButton extends DisplayComponent {
   render() {
-    return <FSComponent.Fragment>{this.props.children}</FSComponent.Fragment>;
-  }
-}
-export const onSetupPage = (ctor, props, service) => {
-  if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
-    window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
-  const rendered = new ctor(props).render();
-
-  return new Proxy({
-    children: [
-      rendered,
-      <TouchButton
-        label={"ACARS"}
+    return (
+      <ImgTouchButton
+        label={"ATC\nDatalink"}
+        imgSrc={"coui://html_ui/garmin-3000-acars/assets/tower.png"}
         class={"gtc-directory-button"}
         onPressed={() => {
-          service.changePageTo("CPDLC");
+          this.props.service.changePageTo("CPDLC");
         }}
-      />,
-    ],
-  });
+      />
+    );
+  }
+}
+
+export const onMfdHomePage = (ctor, props, service) => {
+  if (!window.wtg3000gtc.GtcViewKeys.TextDialog)
+    window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
+  
+  const instance = new ctor(props);
+  const originalRender = instance.render.bind(instance);
+  
+  instance.render = () => {
+    const orig = originalRender();
+    // Add the ATC Data Link button at the beginning of the 4th row (index 3)
+    if (orig.children && orig.children[3] && orig.children[3].children) {
+      orig.children[3].children.unshift(
+        <DataLinkButton service={service} />
+      );
+    }
+    return orig;
+  };
+  
+  return instance;
 };
 
 class WeightProxy extends DisplayComponent {
@@ -84,32 +97,52 @@ export const onWeightPage = (ctor, props, service, instance) => {
   });
 };
 
-export const onSetupPageLiv2AirCj3 = (ctor, props, service) => {
-  // ??????????????????????????????
-  window.wtg3000gtc.GtcViewKeys.TextDialog = "KeyboardDialog";
-  class BtnClass extends DisplayComponent {
-    render() {
-      return (
-        <TouchButton
-          label={"ACARS"}
-          class={"gtc-directory-button"}
-          onPressed={() => {
-            service.changePageTo("CPDLC");
-          }}
-        />
+// Data Link Settings button for Setup page
+class DataLinkSettingsButton extends DisplayComponent {
+  render() {
+    return (
+      <ImgTouchButton
+        label={"Datalink\nSettings"}
+        imgSrc={"coui://html_ui/garmin-3000-acars/assets/tower.png"}
+        class={"gtc-directory-button"}
+        onPressed={() => {
+          this.props.service.openPopup("ACARS_SETTINGS");
+        }}
+      />
+    );
+  }
+}
+
+// Proxy that wraps Setup page and adds Data Link Settings button
+class SetupPageProxy extends DisplayComponent {
+  render() {
+    return (
+      <FSComponent.Fragment>
+        {this.props.originalRendered}
+        <DataLinkSettingsButton service={this.props.service} />
+      </FSComponent.Fragment>
+    );
+  }
+}
+
+export const onSetupPage = (ctor, props, service) => {
+  const instance = new ctor(props);
+  const originalRender = instance.render.bind(instance);
+  
+  instance.render = () => {
+    const orig = originalRender();
+    // Add the Data Link Settings button to the second row
+    if (orig.children && orig.children[1] && orig.children[1].children) {
+      orig.children[1].children.push(
+        <DataLinkSettingsButton service={service} />
       );
     }
-  }
-  const instance = new ctor(props);
-  const btn = new BtnClass({ gtcService: service });
-  const render = instance.render.bind(instance);
-  instance.render = () => {
-    const orig = render();
-    orig.children[2].children = [btn.render()];
     return orig;
   };
+  
   return instance;
 };
+
 export const registerViews = (ctx, fms) => {
   ctx.registerView(
     GtcViewLifecyclePolicy.Persistent,
@@ -122,6 +155,21 @@ export const registerViews = (ctx, fms) => {
           displayPaneIndex={displayPaneIndex}
           controlMode={controlMode}
           fms={fms}
+        />
+      );
+    },
+  );
+  ctx.registerView(
+    GtcViewLifecyclePolicy.Transient,
+    "ACARS_SETTINGS",
+    "MFD",
+    (gtcService, controlMode, displayPaneIndex) => {
+      return (
+        <AcarsSettingsPopUp
+          settingsManager={getSettingsManager(gtcService.bus)}
+          gtcService={gtcService}
+          displayPaneIndex={displayPaneIndex}
+          controlMode={controlMode}
         />
       );
     },

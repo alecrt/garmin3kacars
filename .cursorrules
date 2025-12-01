@@ -1,7 +1,31 @@
 # Garmin 3000/5000 ACARS Extension
 
-Plugin ACARS/CPDLC per G3000/G5000 in MSFS 2024.
-Docs: https://microsoft.github.io/msfs-avionics-mirror/2024/
+ACARS/CPDLC plugin for G3000/G5000 in MSFS 2024.
+
+## Framework Reference (Submodule)
+The MSFS Avionics framework source code is available in `reference/msfs-avionics/`.
+- Docs online: https://microsoft.github.io/msfs-avionics-mirror/2024/
+- GitHub: https://github.com/microsoft/msfs-avionics-mirror
+
+### Useful Paths
+```
+reference/msfs-avionics/src/
+├── sdk/                              # @microsoft/msfs-sdk
+├── garminsdk/                        # @microsoft/msfs-garminsdk
+└── workingtitle-instruments-g3000/   # G3000/G5000 implementation
+    ├── html_ui/GTC/                  # GTC components & pages
+    │   ├── Pages/MfdHomePage/        # MFD Home page
+    │   ├── Pages/UtilitiesPage/      # Utilities page
+    │   └── Components/TouchButton/   # Button components
+    └── wtg3000common/                # @microsoft/msfs-wtg3000-common
+        └── html_ui/Shared/
+            └── GtcView/GtcViewKeys.ts  # View keys enum
+```
+
+### Updating the Submodule
+```bash
+git submodule update --remote reference/msfs-avionics
+```
 
 ## Stack
 - Framework: MSFS 2024 Avionics (JS/JSX)
@@ -28,6 +52,11 @@ src/
 - Classes: PascalCase
 - Functions/vars: camelCase
 - Config objects: SCREAMING_SNAKE_CASE
+
+## Language Requirements
+- **All code comments must be in English**
+- **All commit messages must be in English**
+- Code variable names, function names, and identifiers should follow standard English conventions
 
 ## Core Patterns
 
@@ -132,6 +161,73 @@ const SERVICES = {
   sayintentions: "https://acars.sayintentions.ai/acars/system/connect.html",
 };
 ```
+
+## Hoppie ACARS API
+Docs: https://www.hoppie.nl/acars/system/tech.html
+
+### Connection
+- **URL**: `http://www.hoppie.nl/acars/system/connect.html`
+- **Protocol**: GET or POST (prefer POST for long payloads)
+- **HTTP Timeout**: 15 seconds, then skip and retry after normal delay
+
+### Request Parameters
+| Param | Description |
+|-------|-------------|
+| `logon` | Secret code (min 24 char, mix lowercase/uppercase/numbers) |
+| `from` | Sender callsign |
+| `to` | Recipient callsign (or "SERVER" for server messages) |
+| `type` | Message type: `poll`, `telex`, `cpdlc`, `ping`, `posreq`, `position`, `datareq`, `peek`, `progress`, `inforeq` |
+| `packet` | Message payload |
+
+### Message Types
+| Type | Usage |
+|------|-------|
+| `poll` | **Periodic polling** - returns pending messages for the callsign |
+| `telex` | Generic messages (bulk of non-specialized traffic) |
+| `cpdlc` | CPDLC/ADS-C messages for ATC. "@" = line feed |
+| `ping` | Connection test (does not register online). With `packet=ALL-CALLSIGNS` returns station list |
+| `peek` | Like poll but returns ALL messages from the last 24h (use with caution!) |
+| `inforeq` | Info request: `metar ICAO`, `taf ICAO`, `vatatis ICAO`, `peatis ICAO`, `ivaoatis ICAO` |
+| `posreq` | Position request |
+| `progress` | Out/off/on/in times and ETA |
+
+### Polling Best Practices
+```
+⚠️ FUNDAMENTAL RULES:
+1. DO NOT start polling until the FIRST message is sent
+2. Poll every 45-75 seconds (random for server stability)
+3. After sending request: poll every 20 sec for a short time
+4. Timeout 15 sec → skip attempt, retry after normal delay
+5. URL max 256 characters (use POST for long payloads)
+```
+
+### Request Example
+```javascript
+// GET
+`${url}?logon=${logon}&from=${callsign}&to=SERVER&type=poll&packet=`
+
+// Telex
+`${url}?logon=${logon}&from=${callsign}&to=${dest}&type=telex&packet=${encodeURIComponent(msg)}`
+
+// CPDLC
+`${url}?logon=${logon}&from=${callsign}&to=${atcStation}&type=cpdlc&packet=${cpdlcPayload}`
+
+// Weather request
+`${url}?logon=${logon}&from=${callsign}&to=SERVER&type=inforeq&packet=metar LIRF`
+```
+
+### Telex Workaround for InfoReq
+If inforeq is not implemented, use telex with HCnnn pattern:
+```
+HC000 text  → Echo test
+HC001 ICAO  → PilotEdge ATIS
+HC002 ICAO  → IVAO ATIS (dashes → underscore)
+```
+
+### Response Parsing
+- Multiple messages separated by delimiters
+- CPDLC: "@" indicates line feed
+- Poll returns list of pending messages or empty
 
 ## Key Imports
 - `@microsoft/msfs-sdk`: DisplayComponent, FSComponent, Subject, ArraySubject, CasRegistrationManager

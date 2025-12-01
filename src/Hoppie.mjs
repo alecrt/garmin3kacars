@@ -38,7 +38,7 @@ const parseMessages = (input) => {
 
 const sendAcarsMessage = async (state, receiver, payload, messageType) => {
   const params = new URLSearchParams([
-    ["logon", state.code],
+    ...(state.code ? [["logon", state.code]] : []),
     ["from", state.callsign],
     ["type", messageType],
     ["to", receiver],
@@ -98,15 +98,60 @@ const cpdlcStringBuilder = (state, request, replyId = "") => {
   return `/data2/${state._min_count}/${replyId}/N/${request}`;
 };
 
+// Returns random interval between 45-75 seconds (normal polling)
+const getRandomPollInterval = () => {
+  return Math.floor(Math.random() * (75000 - 45000 + 1)) + 45000;
+};
+
+// Fast polling interval when expecting a response (20 seconds)
+const FAST_POLL_INTERVAL = 20000;
+
+// Duration to maintain fast polling after sending a request (2 minutes)
+const FAST_POLL_DURATION = 120000;
+
+const getPollInterval = (state) => {
+  if (state._expectingResponse && Date.now() < state._expectingResponse) {
+    return FAST_POLL_INTERVAL;
+  }
+  // Reset expecting state if expired
+  if (state._expectingResponse) {
+    state._expectingResponse = null;
+  }
+  return getRandomPollInterval();
+};
+
+const startPollingIfNeeded = (state) => {
+  if (!state._pollingStarted) {
+    state._pollingStarted = true;
+    poll(state);
+  }
+};
+
+// Helper per gestire risposta successo: avvia polling e attiva fast polling
+const handleSuccessfulSend = (state, text) => {
+  if (text.startsWith("ok")) {
+    startPollingIfNeeded(state);
+    state._expectingResponse = Date.now() + FAST_POLL_DURATION;
+    return true;
+  }
+  return false;
+};
+
 const poll = (state) => {
+  const interval = getPollInterval(state);
   state._interval = setTimeout(() => {
-    sendAcarsMessage(state, "SERVER", "Nothing", "POLL")
+    sendAcarsMessage(state, "SERVER", "Nothing", "poll")
       .then((response) => {
         if (response.ok) {
           response
             .text()
             .then((raw) => {
-              for (const message of parseMessages(raw)) {
+              const messages = parseMessages(raw);
+              // If we received messages, we can stop fast polling
+              if (messages.length > 0 && state._expectingResponse) {
+                state._expectingResponse = null;
+              }
+              for (const message of messages) {
                 if (
                   message.from === state.callsign &&
                   message.type === "inforeq"
@@ -162,7 +207,7 @@ const poll = (state) => {
       .catch((err) => {
         poll(state);
       });
-  }, 10000);
+  }, interval);
 };
 
 const addMessage = (state, content) => {
@@ -190,7 +235,7 @@ export const convertUnixToHHMM = (unixTimestamp) => {
 const SERVICES = {
   hoppie: "https://www.hoppie.nl/acars/system/connect.html",
   sayintentions: "https://acars.sayintentions.ai/acars/system/connect.html",
-  beyondatc: "http://localhost:57698/connect.html", // TODO: Verifica URL esatto
+  beyondatc: "http://localhost:57698/connect.html",
 };
 
 export const createClient = (
@@ -211,6 +256,8 @@ export const createClient = (
     idc: 0,
     message_stack: {},
     _service_url: SERVICES[service],
+    _expectingResponse: null,
+    _pollingStarted: false,
   };
 
   state.dispose = () => {
@@ -226,8 +273,7 @@ export const createClient = (
       "telex",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.atisRequest = async (icao, type) => {
@@ -280,8 +326,7 @@ export const createClient = (
     );
     if (!response.ok) return false;
     forwardStateUpdate(state);
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendLogoffRequest = async () => {
@@ -319,8 +364,7 @@ export const createClient = (
       "telex",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendPdc = async (to, dep, arr, stand, atis, eob, freeText) => {
@@ -334,8 +378,7 @@ export const createClient = (
       "telex",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendLevelChange = async (lvl, climb, reason, freeText) => {
@@ -352,8 +395,7 @@ export const createClient = (
       "cpdlc",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendSpeedChange = async (unit, value, reason, freeText) => {
@@ -370,8 +412,7 @@ export const createClient = (
       "cpdlc",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendDirectTo = async (waypoint, reason, freeText) => {
@@ -388,10 +429,9 @@ export const createClient = (
       "cpdlc",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
-  poll(state);
+  // Polling starts only after the first message is sent
   return state;
 };

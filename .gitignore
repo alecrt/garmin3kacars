@@ -4,3 +4,12 @@ node_modules/
 tools/PayloadStationsReader/bin
 tools/PayloadStationsReader/obj
 tools/PayloadStationsReader/publish
+
+# MSFS SDK Build Output
+g3000-acars/_PackageInt/
+g3000-acars/Packages/
+g3000-acars/PackagesMetadata/
+g3000-acars/PackageSources/
+
+# MSFS SDK User Settings
+g3000-acars/*.xml.user

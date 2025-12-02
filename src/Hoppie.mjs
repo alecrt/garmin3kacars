@@ -38,12 +38,13 @@ const parseMessages = (input) => {
 
 const sendAcarsMessage = async (state, receiver, payload, messageType) => {
   const params = new URLSearchParams([
-    ...(state.code ? [["logon", state.code]] : []),
     ["from", state.callsign],
     ["type", messageType],
     ["to", receiver],
     ["packet", payload],
   ]);
+  if(state.code)
+    params.append("logon", state.code);
   return fetch(`${state._service_url}?${params.toString()}`, {
     method: "GET",
   });

@@ -128,7 +128,7 @@ const startPollingIfNeeded = (state) => {
   }
 };
 
-// Helper per gestire risposta successo: avvia polling e attiva fast polling
+// Helper to handle successful response: starts polling and activates fast polling
 const handleSuccessfulSend = (state, text) => {
   if (text.startsWith("ok")) {
     startPollingIfNeeded(state);

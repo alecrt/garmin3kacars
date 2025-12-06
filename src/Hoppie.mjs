@@ -239,6 +239,52 @@ const SERVICES = {
   beyondatc: "http://localhost:57698/connect.html",
 };
 
+// BeyondATC uses a custom REST API for ATIS/METAR requests
+const beyondAtcAtisRequest = async (state, icao, type) => {
+  // TAF requests are not supported by BeyondATC
+  if (type === "TAF") {
+    state._callback({
+      type: "inforeq",
+      content: "TAF not supported",
+      from: "BEYONDATC",
+      ts: Date.now(),
+    });
+    return false;
+  }
+
+  const baseUrl = state._service_url.replace("/connect.html", "");
+  const endpoint = type === "METAR" ? "metar" : "atis";
+  try {
+    const response = await fetch(`${baseUrl}/acars/${endpoint}/${icao}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      state._callback({
+        type: "inforeq",
+        content: `Error: ${errorText}`,
+        from: "BEYONDATC",
+        ts: Date.now(),
+      });
+      return false;
+    }
+    const text = await response.text();
+    state._callback({
+      type: "inforeq",
+      content: text,
+      from: icao,
+      ts: Date.now(),
+    });
+    return true;
+  } catch (err) {
+    state._callback({
+      type: "inforeq",
+      content: `Error: ${err.message}`,
+      from: "BEYONDATC",
+      ts: Date.now(),
+    });
+    return false;
+  }
+};
+
 export const createClient = (
   code,
   callsign,
@@ -278,6 +324,12 @@ export const createClient = (
   };
 
   state.atisRequest = async (icao, type) => {
+    // Handle BeyondATC with custom REST API
+    if (service === "beyondatc") {
+      return beyondAtcAtisRequest(state, icao, type);
+    }
+
+    // Standard Hoppie/SayIntentions handling
     const response = await sendAcarsMessage(
       state,
       state.callsign,
